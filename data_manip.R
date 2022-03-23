@@ -50,8 +50,11 @@ rutas_bus <- shapes %>%
   st_cast("LINESTRING")
 
 
-red_metro <- rutas %>% 
+red_metro <- shapes %>% 
   filter(str_detect(shape_id, "^L")) %>%
+  group_by(shape_id) %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("LINESTRING") %>% 
   mutate(line = str_split_n(shape_id, pattern = "-", n = 1)) %>% 
   select(line, geometry) %>% 
   distinct()
@@ -62,3 +65,24 @@ estaciones_metro <- stops %>%
 paradas_bus <- stops %>% 
   st_join(y = zonas %>% select(comuna, nom_comuna, geocode)) %>%
   mutate(nom_comuna = str_to_title(nom_comuna))
+
+
+ggplot() +
+  geom_sf(data = red_metro,
+          aes(colour = line)) +
+  geom_sf(data = estaciones_metro,
+          colour = "black") +
+  scale_color_brewer(name = NULL,
+                     palette = "Accent") +
+  theme_minimal()
+
+ggsave(filename = here::here("plots", "metro_scl.png"),
+       type = "cairo",
+       scale = 1.5,
+       bg = "white",
+       dpi = 300,
+       # height = 5,
+       # width = 10
+       )
+  
+  
