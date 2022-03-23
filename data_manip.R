@@ -9,7 +9,7 @@ library(mapview)
 usethis::use_zip(
   url = "https://www.dtpm.cl/descargas/gtfs/GTFS-V70-PO20220228.zip",
   destdir = here::here("input_data"),
-  cleanup = FALSE
+  cleanup = TRUE
   )
 
 
