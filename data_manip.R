@@ -3,6 +3,9 @@ library(sf)
 library(mapview)
 
 
+# load data ---------------------------------------------------------------
+
+
 usethis::use_zip(
   url = "https://www.dtpm.cl/descargas/gtfs/GTFS-V70-PO20220228.zip",
   destdir = here::here("input_data"),
@@ -30,3 +33,32 @@ shapes <- read_csv(file = here::here("input_data", "GTFS-V70-PO20220228", "shape
            crs = 4326) %>% 
   st_transform(crs = 32719)
 
+
+zonas <- st_read(dsn =here::here("input_data", "zonas_censales.geojson"),
+                 as_tibble = TRUE)
+
+
+
+
+# transform data ----------------------------------------------------------
+
+
+rutas_bus <- shapes %>% 
+  filter(!str_detect(shape_id, "^L")) %>%
+  group_by(shape_id) %>% 
+  summarise(do_union = FALSE) %>% 
+  st_cast("LINESTRING")
+
+
+red_metro <- rutas %>% 
+  filter(str_detect(shape_id, "^L")) %>%
+  mutate(line = str_split_n(shape_id, pattern = "-", n = 1)) %>% 
+  select(line, geometry) %>% 
+  distinct()
+
+estaciones_metro <- stops %>% 
+  filter(str_detect(stop_url, "metro"))
+
+paradas_bus <- stops %>% 
+  st_join(y = zonas %>% select(comuna, nom_comuna, geocode)) %>%
+  mutate(nom_comuna = str_to_title(nom_comuna))
